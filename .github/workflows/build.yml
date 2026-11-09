@@ -12,9 +12,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # خطوة فك الضغط
+    # البحث عن أي ملف ينتهي بـ .zip وفك ضغطه
     - name: Unzip Project
-      run: unzip -o game.zip
+      run: unzip -o *.zip
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -22,20 +22,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # إنشاء مفتاح التوقيع
     - name: Generate Debug Keystore
       run: |
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
 
-    # إعطاء صلاحية التنفيذ لملف gradlew
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    # البناء
     - name: Build with Gradle
       run: ./gradlew assembleDebug
 
-    # رفع ملف APK الناتج
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
