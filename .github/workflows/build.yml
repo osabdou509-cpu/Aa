@@ -21,24 +21,28 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # إنشاء مفتاح التوقيع داخل المجلد الفرعي (حيث توجد ملفات المشروع)
+    # إنشاء ملف gradlew تلقائياً باستخدام Gradle المثبت مسبقاً في GitHub
+    - name: Setup Gradle Wrapper
+      run: |
+        PROJECT_DIR=$(find . -name "build.gradle.kts" -maxdepth 2 -exec dirname {} \; | head -n 1)
+        cd "$PROJECT_DIR"
+        gradle wrapper
+
     - name: Generate Debug Keystore
       run: |
         PROJECT_DIR=$(find . -name "build.gradle.kts" -maxdepth 2 -exec dirname {} \; | head -n 1)
         cd "$PROJECT_DIR"
         keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
 
-    # إعطاء صلاحية التنفيذ لملف gradlew أينما كان
-    - name: Grant execute permission for gradlew
-      run: find . -name "gradlew" -exec chmod +x {} \;
-
-    # تشغيل البناء من داخل المجلد الذي يحتوي على gradlew
     - name: Build with Gradle
-      run: find . -name "gradlew" -execdir ./gradlew assembleDebug \;
+      run: |
+        PROJECT_DIR=$(find . -name "build.gradle.kts" -maxdepth 2 -exec dirname {} \; | head -n 1)
+        cd "$PROJECT_DIR"
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
-    # رفع ملف APK الناتج
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: game-debug
-        path: '**/*.apk'
+        path: '**/build/outputs/apk/debug/*.apk'
